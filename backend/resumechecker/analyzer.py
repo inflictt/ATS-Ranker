@@ -120,7 +120,8 @@ def extract_tech_skills(text: str) -> list:
 # ---------------------------------------------------
 def preprocess_text(text: str) -> str:
     text = clean_text(text)
-    doc  = nlp(text)
+    nlp_model = get_nlp()
+    doc = nlp_model(text)
     tokens = [
         token.lemma_
         for token in doc
