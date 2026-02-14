@@ -1,0 +1,366 @@
+{% csrf_token %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS Resume Analyser</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-base:      #060810;
+    --bg-layer2:    #111827;
+    --glass-bg:     rgba(255,255,255,.035);
+    --glass-border: rgba(255,255,255,.08);
+    --violet:       #a78bfa;
+    --violet-dim:   rgba(167,139,250,.15);
+    --sky:          #38bdf8;
+    --emerald:      #34d399;
+    --rose:         #fb7185;
+    --amber:        #fbbf24;
+    --text-primary: #f1f5f9;
+    --text-secondary:#94a3b8;
+    --text-muted:   #475569;
+    --radius-lg:    20px;
+    --radius-md:    12px;
+    --radius-sm:    8px;
+    --shadow-glass: 0 8px 32px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.06) inset;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Syne', sans-serif; background: var(--bg-base); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; line-height: 1.6; }
+.bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse 80% 60% at 10% 20%, rgba(167,139,250,.12) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 90% 80%, rgba(56,189,248,.10) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 50% 50%, rgba(52,211,153,.06) 0%, transparent 60%); }
+#particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.page-wrap { position: relative; z-index: 1; max-width: 1260px; margin: 0 auto; padding: 24px 28px 48px; }
+.site-header { display: flex; align-items: center; gap: 12px; padding: 0 0 40px; }
+.logo-mark { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--shadow-glass); }
+.site-name { font-size: 1.4rem; font-weight: 800; letter-spacing: -.02em; }
+.site-name .accent { color: var(--violet); }
+.main-grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+.glass-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); backdrop-filter: blur(24px) saturate(140%); -webkit-backdrop-filter: blur(24px) saturate(140%); box-shadow: var(--shadow-glass); padding: 32px; position: relative; overflow: hidden; animation: cardIn .5s cubic-bezier(.4,0,.2,1) both; }
+.glass-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.12) 30%, rgba(255,255,255,.12) 70%, transparent); }
+@keyframes cardIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.panel-label { font-family: 'DM Mono', monospace; font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.upload-panel { animation-delay: .05s; }
+.panel-title { font-size: 2.1rem; font-weight: 800; line-height: 1.15; letter-spacing: -.03em; margin-bottom: 10px; }
+.panel-title em { font-style: normal; background: linear-gradient(135deg, var(--violet), var(--sky)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.panel-sub { font-size: .85rem; color: var(--text-secondary); margin-bottom: 32px; line-height: 1.6; font-family: 'DM Mono', monospace; font-weight: 300; }
+.field-group { margin-bottom: 20px; }
+.field-label { display: block; font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; }
+.select-wrap { position: relative; }
+.select-wrap select { width: 100%; appearance: none; background: rgba(255,255,255,.04); border: 1px solid var(--glass-border); border-radius: var(--radius-md); color: var(--text-primary); font-family: 'Syne', sans-serif; font-size: .9rem; padding: 13px 40px 13px 16px; cursor: pointer; outline: none; transition: border-color .2s, box-shadow .2s; }
+.select-wrap select:focus { border-color: var(--violet); box-shadow: 0 0 0 3px var(--violet-dim); }
+.select-wrap select option { background: var(--bg-layer2); }
+.select-arrow { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; font-size: .85rem; }
+.drop-zone { border: 1.5px dashed rgba(167,139,250,.3); border-radius: var(--radius-md); padding: 28px 20px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s, transform .15s; background: rgba(167,139,250,.03); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--violet); background: var(--violet-dim); transform: scale(1.01); }
+.drop-zone.has-file { border-color: var(--emerald); background: rgba(52,211,153,.05); }
+.drop-icon { color: var(--violet); opacity: .7; }
+.drop-primary { display: block; font-size: .9rem; font-weight: 600; color: var(--text-primary); }
+.drop-secondary { display: block; font-size: .75rem; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.error-box { display: none; background: rgba(251,113,133,.1); border: 1px solid rgba(251,113,133,.3); border-radius: var(--radius-sm); color: #fda4af; font-size: .82rem; font-family: 'DM Mono', monospace; padding: 10px 14px; margin-bottom: 16px; }
+button#analyzeBtn { width: 100%; position: relative; padding: 15px 24px; background: linear-gradient(135deg, var(--violet), #7c3aed); border: none; border-radius: var(--radius-md); color: #fff; font-family: 'Syne', sans-serif; font-size: .95rem; font-weight: 700; letter-spacing: .02em; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: space-between; transition: transform .15s, box-shadow .2s, opacity .2s; box-shadow: 0 4px 24px rgba(167,139,250,.35); margin-top: 8px; }
+button#analyzeBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(167,139,250,.5); }
+button#analyzeBtn:active { transform: translateY(0); }
+button#analyzeBtn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.btn-glow { position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); transform: translateX(-100%); transition: transform .5s; }
+button#analyzeBtn:hover .btn-glow { transform: translateX(100%); }
+.btn-arrow { font-size: 1.1rem; transition: transform .2s; }
+button#analyzeBtn:hover .btn-arrow { transform: translateX(4px); }
+.results-col { display: flex; flex-direction: column; gap: 20px; }
+.score-card { animation-delay: .1s; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.score-ring-wrap { position: relative; width: 160px; height: 160px; }
+.score-ring { width: 160px; height: 160px; transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: rgba(255,255,255,.06); stroke-width: 10; }
+.ring-fill { fill: none; stroke: url(#ringViolet); stroke-width: 10; stroke-linecap: round; stroke-dasharray: 364.4; stroke-dashoffset: 364.4; transition: stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1); filter: drop-shadow(0 0 8px var(--violet)); }
+.score-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.score-num { font-size: 2.4rem; font-weight: 800; letter-spacing: -.04em; line-height: 1; font-family: 'DM Mono', monospace; transition: color .4s; }
+.score-num.green { color: var(--emerald); } .score-num.amber { color: var(--amber); } .score-num.red { color: var(--rose); }
+.score-pct { font-size: .9rem; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.score-label { font-size: .62rem; letter-spacing: .15em; text-transform: uppercase; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 4px; }
+.sub-scores { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+.sub-item { display: grid; grid-template-columns: 56px 1fr 52px; align-items: center; gap: 10px; }
+.sub-name { font-family: 'DM Mono', monospace; font-size: .72rem; color: var(--text-muted); letter-spacing: .06em; }
+.sub-bar-wrap { height: 5px; background: rgba(255,255,255,.06); border-radius: 999px; overflow: hidden; }
+.sub-bar { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--violet), var(--sky)); transition: width 1s cubic-bezier(.4,0,.2,1) .4s; }
+.sub-val { font-family: 'DM Mono', monospace; font-size: .75rem; color: var(--violet); text-align: right; }
+.skills-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.skills-card { animation-delay: .15s; }
+.skills-title { font-size: .95rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-green { background: var(--emerald); box-shadow: 0 0 8px var(--emerald); } .dot-red { background: var(--rose); box-shadow: 0 0 8px var(--rose); } .dot-amber { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.skill-chips { list-style: none; display: flex; flex-wrap: wrap; gap: 7px; }
+.skill-chips li { font-family: 'DM Mono', monospace; font-size: .75rem; padding: 5px 12px; border-radius: 999px; border: 1px solid; animation: chipIn .25s cubic-bezier(.4,0,.2,1) both; }
+#matchedSkills li { background: rgba(52,211,153,.07); border-color: rgba(52,211,153,.25); color: var(--emerald); }
+#missingSkills li { background: rgba(251,113,133,.07); border-color: rgba(251,113,133,.25); color: #fda4af; }
+.chip-empty { background: transparent !important; border-color: var(--text-muted) !important; color: var(--text-muted) !important; font-size: .72rem !important; }
+@keyframes chipIn { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
+.suggestions-card { animation-delay: .2s; }
+.suggestion-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.suggestion-list li { font-size: .85rem; color: var(--text-secondary); font-family: 'DM Mono', monospace; font-weight: 300; padding: 12px 16px; background: rgba(251,191,36,.04); border: 1px solid rgba(251,191,36,.12); border-left: 3px solid var(--amber); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; line-height: 1.55; animation: chipIn .25s cubic-bezier(.4,0,.2,1) both; }
+.suggestion-list li.chip-empty { background: transparent !important; border: 1px solid var(--text-muted) !important; color: var(--text-muted) !important; border-left: 1px solid var(--text-muted) !important; border-radius: var(--radius-sm) !important; }
+.site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--glass-border); display: flex; gap: 12px; align-items: center; font-family: 'DM Mono', monospace; font-size: .72rem; color: var(--text-muted); letter-spacing: .06em; }
+.footer-sep { color: var(--violet); }
+@media (max-width: 960px) { .main-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .page-wrap { padding: 16px 16px 40px; } .skills-row { grid-template-columns: 1fr; } .glass-card { padding: 22px; } .panel-title { font-size: 1.7rem; } }
+</style>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+<canvas id="particles"></canvas>
+
+<div class="page-wrap">
+
+    <header class="site-header">
+        <div class="logo-mark">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <rect x="2" y="2" width="10" height="10" rx="2" fill="url(#g1)"/>
+                <rect x="16" y="2" width="10" height="10" rx="2" fill="url(#g2)" opacity=".6"/>
+                <rect x="2" y="16" width="10" height="10" rx="2" fill="url(#g2)" opacity=".6"/>
+                <rect x="16" y="16" width="10" height="10" rx="2" fill="url(#g1)"/>
+                <defs>
+                    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient>
+                    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient>
+                </defs>
+            </svg>
+        </div>
+        <span class="site-name">ATS<span class="accent">.</span>rank</span>
+    </header>
+
+    <main class="main-grid">
+
+        <section class="glass-card upload-panel">
+            <div class="panel-label">01 — Upload</div>
+            <h2 class="panel-title">Analyse Your<br><em>Resume</em></h2>
+            <p class="panel-sub">Match your resume against a job description using TF-IDF + skill extraction.</p>
+
+            <form id="resumeForm" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="field-group">
+                    <label class="field-label" for="jobSelect">Target Role</label>
+                    <div class="select-wrap">
+                        <select id="jobSelect">
+                            <option value="1">Back End Developer</option>
+                            <option value="2">Front End Developer</option>
+                        </select>
+                        <span class="select-arrow">↓</span>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="resumeInput">Resume PDF</label>
+                    <div class="drop-zone" id="dropZone" onclick="document.getElementById('resumeInput').click()">
+                        <div class="drop-icon">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                                <path d="M16 4v18M9 11l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M5 24h22" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".4"/>
+                                <path d="M5 28h22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".2"/>
+                            </svg>
+                        </div>
+                        <div id="dropText">
+                            <span class="drop-primary">Drop PDF here</span>
+                            <span class="drop-secondary">or click to browse</span>
+                        </div>
+                    </div>
+                    <input type="file" id="resumeInput" accept=".pdf" style="display:none">
+                </div>
+
+                <div id="errorBox" class="error-box"></div>
+
+                <button type="button" id="analyzeBtn" onclick="analyzeResume()">
+                    <span class="btn-text">Analyse Resume</span>
+                    <span class="btn-glow"></span>
+                    <span class="btn-arrow">→</span>
+                </button>
+            </form>
+        </section>
+
+        <section class="results-col">
+
+            <div class="glass-card score-card">
+                <div class="panel-label">02 — Score</div>
+                <div class="score-ring-wrap">
+                    <svg class="score-ring" viewBox="0 0 140 140">
+                        <defs>
+                            <linearGradient id="ringViolet" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient>
+                            <linearGradient id="ringGreen"  x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient>
+                            <linearGradient id="ringAmber"  x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#f97316"/></linearGradient>
+                            <linearGradient id="ringRed"    x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#fb7185"/><stop offset="100%" stop-color="#e11d48"/></linearGradient>
+                        </defs>
+                        <circle class="ring-track" cx="70" cy="70" r="58"/>
+                        <circle class="ring-fill" id="ringFill" cx="70" cy="70" r="58" stroke-dasharray="364.4" stroke-dashoffset="364.4"/>
+                    </svg>
+                    <div class="score-inner">
+                        <span class="score-num" id="scoreNum">—</span>
+                        <span class="score-pct">%</span>
+                        <span class="score-label">ATS Match</span>
+                    </div>
+                </div>
+                <div class="sub-scores">
+                    <div class="sub-item">
+                        <span class="sub-name">TF-IDF</span>
+                        <div class="sub-bar-wrap"><div class="sub-bar" id="tfidfBar"></div></div>
+                        <span class="sub-val" id="tfidfVal">—</span>
+                    </div>
+                    <div class="sub-item">
+                        <span class="sub-name">Skills</span>
+                        <div class="sub-bar-wrap"><div class="sub-bar" id="skillBar"></div></div>
+                        <span class="sub-val" id="skillVal">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="skills-row">
+                <div class="glass-card skills-card">
+                    <div class="panel-label">03 — Matched</div>
+                    <h3 class="skills-title"><span class="dot dot-green"></span>Matched Skills</h3>
+                    <ul class="skill-chips" id="matchedSkills"><li class="chip-empty">Run analysis to see results</li></ul>
+                </div>
+                <div class="glass-card skills-card">
+                    <div class="panel-label">04 — Missing</div>
+                    <h3 class="skills-title"><span class="dot dot-red"></span>Missing Skills</h3>
+                    <ul class="skill-chips" id="missingSkills"><li class="chip-empty">Run analysis to see results</li></ul>
+                </div>
+            </div>
+
+            <div class="glass-card suggestions-card">
+                <div class="panel-label">05 — Action</div>
+                <h3 class="skills-title"><span class="dot dot-amber"></span>Recommendations</h3>
+                <ul class="suggestion-list" id="suggestions"><li class="chip-empty">Run analysis to see recommendations</li></ul>
+            </div>
+
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <span>ATS.rank — Resume Intelligence</span>
+        <span class="footer-sep">·</span>
+        <span>Powered by TF-IDF &amp; NLP</span>
+    </footer>
+
+</div>
+
+<script>
+function getCSRFToken() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
+}
+
+async function analyzeResume() {
+    const fileInput  = document.getElementById('resumeInput');
+    const jobSelect  = document.getElementById('jobSelect');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const errorBox   = document.getElementById('errorBox');
+
+    errorBox.textContent = '';
+    errorBox.style.display = 'none';
+    clearResults();
+
+    if (!fileInput.files.length) { showError('Please upload a resume PDF before analysing.'); return; }
+
+    analyzeBtn.disabled = true;
+    analyzeBtn.querySelector('.btn-text').textContent = 'Analysing…';
+
+    const formData = new FormData();
+    formData.append('resume', fileInput.files[0]);
+    formData.append('job_id', jobSelect.value);
+
+    try {
+        const response = await fetch('/api/upload-resume/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() },
+            body: formData
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) { showError(data.error || 'Server error — please try again.'); return; }
+        animateScore(data.score, data.tfidf_score, data.skill_score);
+        renderChips('matchedSkills', data.matched_keywords, 'No matched skills found.');
+        renderChips('missingSkills', data.missing_keywords, 'No missing skills — great work!');
+        renderSuggestions('suggestions', data.suggestions, 'No suggestions.');
+    } catch (err) {
+        console.error(err);
+        showError('Network error — check your connection and try again.');
+    } finally {
+        analyzeBtn.disabled = false;
+        analyzeBtn.querySelector('.btn-text').textContent = 'Analyse Resume';
+    }
+}
+
+function animateScore(score, tfidf, skill) {
+    const circumference = 364.4;
+    const ring = document.getElementById('ringFill');
+    ring.setAttribute('stroke', score >= 70 ? 'url(#ringGreen)' : score >= 40 ? 'url(#ringAmber)' : 'url(#ringRed)');
+    ring.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1)';
+    ring.style.strokeDashoffset = circumference - (score / 100) * circumference;
+    const numEl = document.getElementById('scoreNum');
+    let cur = 0, step = score / 60;
+    const iv = setInterval(() => { cur = Math.min(cur + step, score); numEl.textContent = cur.toFixed(1); if (cur >= score) clearInterval(iv); }, 16);
+    numEl.className = 'score-num ' + (score >= 70 ? 'green' : score >= 40 ? 'amber' : 'red');
+    setTimeout(() => {
+        document.getElementById('tfidfBar').style.width = tfidf + '%';
+        document.getElementById('skillBar').style.width = skill + '%';
+        document.getElementById('tfidfVal').textContent = tfidf + '%';
+        document.getElementById('skillVal').textContent = skill + '%';
+    }, 300);
+}
+
+function renderChips(id, items, emptyMsg) {
+    const el = document.getElementById(id); el.innerHTML = '';
+    if (!items || !items.length) { el.innerHTML = `<li class="chip-empty">${emptyMsg}</li>`; return; }
+    items.forEach((item, i) => { const li = document.createElement('li'); li.textContent = item; li.style.animationDelay = (i*35)+'ms'; el.appendChild(li); });
+}
+
+function renderSuggestions(id, items, emptyMsg) {
+    const el = document.getElementById(id); el.innerHTML = '';
+    if (!items || !items.length) { el.innerHTML = `<li class="chip-empty">${emptyMsg}</li>`; return; }
+    items.forEach((item, i) => { const li = document.createElement('li'); li.textContent = item; li.style.animationDelay = (i*60)+'ms'; el.appendChild(li); });
+}
+
+function clearResults() {
+    const sn = document.getElementById('scoreNum');
+    if (sn) { sn.textContent = '—'; sn.className = 'score-num'; }
+    const ring = document.getElementById('ringFill');
+    if (ring) { ring.style.transition = 'none'; ring.style.strokeDashoffset = '364.4'; }
+    ['tfidfBar','skillBar'].forEach(id => { const el=document.getElementById(id); if(el) el.style.width='0'; });
+    ['tfidfVal','skillVal'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent='—'; });
+    ['matchedSkills','missingSkills','suggestions'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML='<li class="chip-empty">Run analysis to see results</li>'; });
+}
+
+function showError(msg) { const el=document.getElementById('errorBox'); el.textContent=msg; el.style.display='block'; }
+
+document.getElementById('resumeInput').addEventListener('change', function() {
+    const name = this.files[0]?.name || 'No file chosen';
+    document.getElementById('dropText').innerHTML = `<span class="drop-primary">${name}</span><span class="drop-secondary">click to change</span>`;
+    document.getElementById('dropZone').classList.add('has-file');
+});
+
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) { const input=document.getElementById('resumeInput'); const dt=new DataTransfer(); dt.items.add(file); input.files=dt.files; input.dispatchEvent(new Event('change')); }
+});
+
+(function() {
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    const pts = Array.from({length:55}, () => ({ x:Math.random()*1920, y:Math.random()*1080, vx:(Math.random()-.5)*.3, vy:(Math.random()-.5)*.3, r:Math.random()*1.5+.5 }));
+    function resize() { W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    function draw() {
+        ctx.clearRect(0,0,W,H);
+        pts.forEach(p => { p.x=(p.x+p.vx+W)%W; p.y=(p.y+p.vy+H)%H; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle='rgba(167,139,250,.35)'; ctx.fill(); });
+        for (let i=0;i<pts.length;i++) for (let j=i+1;j<pts.length;j++) { const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy); if(d<120){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(167,139,250,${.12*(1-d/120)})`;ctx.lineWidth=.6;ctx.stroke();} }
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+</script>
+</body>
+</html>
