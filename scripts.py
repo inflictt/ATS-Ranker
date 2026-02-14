@@ -12,3 +12,4 @@ def extract_text_from_pdf(pdf_path):
                 text += page_text + "\n"
     return text                       
 #htis is a comment
+#htis is a comment
