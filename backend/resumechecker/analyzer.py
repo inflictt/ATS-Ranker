@@ -7,7 +7,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 # Load NLP model
-nlp = spacy.load("en_core_web_sm")
+nlp = None
+
+def get_nlp():
+    global nlp
+    if nlp is None:
+        nlp = spacy.load("en_core_web_sm")
+    return nlp
+
 
 
 # ---------------------------------------------------
