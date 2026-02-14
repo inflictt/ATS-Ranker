@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from resumechecker.views import home
+from resumechecker.views import home,JobDescription
 
 urlpatterns = [
     path("", home, name="home"),  # Frontend page
