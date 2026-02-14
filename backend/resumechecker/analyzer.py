@@ -120,14 +120,22 @@ def extract_tech_skills(text: str) -> list:
 # ---------------------------------------------------
 def preprocess_text(text: str) -> str:
     text = clean_text(text)
-    nlp_model = get_nlp()
-    doc = nlp_model(text)
-    tokens = [
-        token.lemma_
-        for token in doc
-        if not token.is_stop and not token.is_punct and token.lemma_.strip()
-    ]
-    return " ".join(tokens)
+
+    try:
+        nlp_model = get_nlp()
+        doc = nlp_model(text)
+
+        tokens = [
+            token.lemma_
+            for token in doc
+            if not token.is_stop and not token.is_punct and token.lemma_.strip()
+        ]
+        return " ".join(tokens)
+
+    except Exception as e:
+        print("SpaCy preprocessing error:", e)
+        return text  # fallback to cleaned text instead of crashing
+
 
 
 # ---------------------------------------------------
