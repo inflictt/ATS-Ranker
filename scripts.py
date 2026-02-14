@@ -11,3 +11,4 @@ def extract_text_from_pdf(pdf_path):
             if page_text:              # 🔐 important
                 text += page_text + "\n"
     return text                       
+#htis is a comment
