@@ -1,7 +1,3 @@
-Based on the repository structure and code visible in your screenshots, I've put together a professional `README.md` for your **ATS-Ranker** project. It follows the clean, structured style of your previous sneaker project but is tailored to this Django-based backend and its specific features.
-
----
-
 # ATS-Ranker – AI-Powered Resume Screening Tool
 
 **ATS-Ranker** is a web application designed to streamline the recruitment process. It uses natural language processing (NLP) to analyze resumes against job descriptions, providing a compatibility score to help recruiters identify the best candidates quickly.
@@ -103,7 +99,4 @@ The application will be available at: **[http://127.0.0.1:8000](https://www.goog
 ## Contributors
 
 * **Saksham Lodha**
-
----
-
-Would you like me to add a specific section for the **NLP algorithms** you're using in `analyzer.py`, or perhaps a **Screenshots** section once you have the UI finalized?
+  
